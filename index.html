@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Plan del Día">
+  <meta name="theme-color" content="#1A2E44">
+  <title>Plan del Día — Adrián</title>
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #1A2E44;
+      --navy2:   #2B4D6F;
+      --teal:    #0F6E56;
+      --amber:   #BA7517;
+      --purple:  #534AB7;
+      --coral:   #993556;
+      --gray:    #888;
+      --light:   #F5F8FC;
+      --border:  #DDE3EA;
+      --alta-bg: #F7C5C5;
+      --alta-tx: #712B13;
+      --med-bg:  #FAEEDA;
+      --med-tx:  #633806;
+      --rut-bg:  #E1F5EE;
+      --rut-tx:  #085041;
+      --con-bg:  #E6F1FB;
+      --con-tx:  #0C447C;
+      --white:   #fff;
+      --radius:  14px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--light);
+      color: var(--navy);
+      min-height: 100dvh;
+      padding-bottom: 32px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--navy);
+      padding: 52px 20px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+    .header-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 6px;
+    }
+    .header-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    .header-date {
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* ── MAIN ── */
+    .main { padding: 20px 16px 0; }
+
+    /* ── GENERATE BUTTON ── */
+    .gen-card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .gen-card h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .gen-card p {
+      font-size: 13px;
+      color: var(--gray);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .btn-generate {
+      width: 100%;
+      padding: 16px;
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-generate:active { opacity: 0.85; transform: scale(0.98); }
+    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-generate svg { width: 20px; height: 20px; }
+
+    /* ── STATUS ── */
+    .status {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+    .status.loading {
+      display: flex;
+      background: var(--con-bg);
+      color: var(--con-tx);
+    }
+    .status.success {
+      display: flex;
+      background: var(--rut-bg);
+      color: var(--rut-tx);
+    }
+    .status.error {
+      display: flex;
+      background: var(--alta-bg);
+      color: var(--alta-tx);
+    }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── PREVIEW TABLE ── */
+    .preview-card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      overflow: hidden;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .preview-card.visible { display: block; }
+    .preview-header {
+      background: var(--navy);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .preview-header span {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .preview-header .count {
+      font-size: 11px;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .activity-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .activity-row:last-child { border-bottom: none; }
+    .activity-row:nth-child(even) { background: var(--light); }
+
+    .row-time {
+      font-size: 11px;
+      color: var(--gray);
+      min-width: 72px;
+      padding-top: 2px;
+      line-height: 1.4;
+    }
+    .row-content { flex: 1; }
+    .row-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--navy);
+      line-height: 1.4;
+      margin-bottom: 3px;
+    }
+    .row-desc {
+      font-size: 11px;
+      color: var(--gray);
+      line-height: 1.5;
+    }
+    .row-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+    .tag {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+    .tag-empresa { background: var(--light); color: var(--navy2); border: 0.5px solid var(--border); }
+    .tag-alta    { background: var(--alta-bg); color: var(--alta-tx); }
+    .tag-media   { background: var(--med-bg);  color: var(--med-tx); }
+    .tag-rutina  { background: var(--rut-bg);  color: var(--rut-tx); }
+    .tag-content { background: var(--con-bg);  color: var(--con-tx); }
+
+    /* ── DOWNLOAD BTN ── */
+    .btn-download {
+      width: calc(100% - 32px);
+      margin: 0 16px 20px;
+      padding: 14px;
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-download.visible { display: flex; }
+    .btn-download:active { opacity: 0.85; transform: scale(0.98); }
+
+    /* ── INSTALL BANNER ── */
+    .install-banner {
+      background: var(--navy2);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .install-banner svg { width: 24px; height: 24px; flex-shrink: 0; color: rgba(255,255,255,0.7); }
+    .install-banner p { font-size: 12px; color: rgba(255,255,255,0.8); line-height: 1.5; }
+    .install-banner strong { color: #fff; }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--gray);
+      padding: 0 16px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">Sistema de Gestión</div>
+  <div class="header-title">Plan del Día</div>
+  <div class="header-date" id="headerDate">Cargando fecha...</div>
+</div>
+
+<div class="main">
+
+  <!-- Install hint for iOS -->
+  <div class="install-banner" id="installBanner" style="display:none;">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+    <p>Para instalar como app: toca <strong>Compartir</strong> → <strong>Agregar a pantalla de inicio</strong></p>
+  </div>
+
+  <!-- Generate card -->
+  <div class="gen-card">
+    <h2>Generar plan de hoy</h2>
+    <p>Lee tus pendientes activos y las estrategias de cada marca para armar el plan del día.</p>
+
+    <button class="btn-generate" id="btnGenerate" onclick="generatePlan()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      Generar plan del día
+    </button>
+
+    <div class="status loading" id="statusLoading">
+      <div class="spinner"></div>
+      <span id="statusText">Leyendo pendientes...</span>
+    </div>
+    <div class="status success" id="statusSuccess">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+      <span>Plan generado. Descarga el PDF abajo.</span>
+    </div>
+    <div class="status error" id="statusError">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      <span id="errorText">Error al generar el plan.</span>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-card" id="previewCard">
+    <div class="preview-header">
+      <span>Vista previa</span>
+      <span class="count" id="actCount">0 actividades</span>
+    </div>
+    <div id="previewList"></div>
+  </div>
+
+  <!-- Download button -->
+  <button class="btn-download" id="btnDownload" onclick="downloadPDF()">
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+    </svg>
+    Descargar PDF
+  </button>
+
+  <div class="footer">
+    Sistema de Gestión · Adrián González Mercer<br>
+    Río Sonora · Velamar · CulturAgave · Mercer
+  </div>
+
+</div>
+
+<script>
+// ── DATE ──────────────────────────────────────────────────────────────────
+const DIAS   = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const MESES  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+function todayStr() {
+  const d = new Date();
+  return `${DIAS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}, ${d.getFullYear()}`;
+}
+function todayFilename() {
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  return `Plan_${DIAS[d.getDay()]}_${dd}${mm}${d.getFullYear()}`;
+}
+
+document.getElementById('headerDate').textContent = todayStr();
+
+// iOS install hint
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.navigator.standalone;
+if (isIOS && !isStandalone) {
+  document.getElementById('installBanner').style.display = 'flex';
+}
+
+// ── SCHEDULE DATA ─────────────────────────────────────────────────────────
+// Base schedule — content slots filled dynamically based on day of week
+const DOW = new Date().getDay(); // 0=Sun,1=Mon,...,6=Sat
+
+// Content rules per brand per day
+const RS_CONTENT = {
+  1: { pilar: 'Producto',          desc: 'Foto del Bacanora Blanco o Crema. Botella como protagonista, estética cuidada.', fmt: 'Imagen' },
+  2: { pilar: 'Proceso artesanal', desc: 'Reel detrás de cámaras: agave, destilación o manos del maestro destilador.', fmt: 'Reel' },
+  3: { pilar: 'Coctelería',        desc: 'Imagen de receta o maridaje de Bacanora con comida sonorense (carne asada, queso).', fmt: 'Imagen' },
+  4: { pilar: 'Cultura Sonorense', desc: 'Foto o reel de paisaje, tradición o gastronomía sonorense. Río Sonora en ese universo.', fmt: 'Foto / Reel' },
+  5: { pilar: 'Lifestyle',         desc: 'Foto de momento de consumo: asado, atardecer, reunión con amigos.', fmt: 'Imagen' },
+  6: { pilar: 'Educativo',         desc: 'Reel corto: ¿qué es el bacanora? ¿cómo difiere del mezcal? Dato rápido en 15 seg.', fmt: 'Reel' },
+  0: null
+};
+const MC_CONTENT = {
+  1: { pilar: 'El Trabajo',        desc: 'Foto o fragmento de proyecto reciente. Still de producción de alto impacto visual.', fmt: 'Foto / Reel' },
+  2: { pilar: 'Criterio Creativo', desc: 'Carrusel con punto de vista sobre producción, imagen o dirección. Voz de autor.', fmt: 'Carrusel' },
+  3: { pilar: 'El Proceso',        desc: 'Reel o foto de detrás de cámaras: Sony FX3 en set, iluminación, configuración.', fmt: 'Reel / Foto' },
+  4: { pilar: 'El Trabajo Studio', desc: 'Foto o reel de producción empresarial. Dirigido también a LinkedIn.', fmt: 'Foto / Reel' },
+  5: { pilar: 'El Trabajo — Producciones', desc: 'Fragmento de videoclip o proceso de rodaje musical. Para artistas y managers.', fmt: 'Reel' },
+  6: { pilar: 'El Equipo',         desc: 'Contenido técnico del Sony FX3: lentes, setup, flujo de trabajo. Para creadores y clientes.', fmt: 'Reel / Foto' },
+  0: null
+};
+
+function buildSchedule(pendientes) {
+  const rsContent = RS_CONTENT[DOW];
+  const mcContent = MC_CONTENT[DOW];
+
+  const base = [
+    { hora: '7:00 – 7:20',  titulo: 'Ritual de arranque',           desc: 'Revisar pendientes y definir las 3 tareas del día. Sin teléfono.',    empresa: 'Personal',    tipo: '',          prio: 'Rutina' },
+    { hora: '7:20 – 9:00',  titulo: 'Bloque profundo #1',           desc: getPendienteBloque(pendientes, 'alta'),                                 empresa: getEmpresa(pendientes, 'alta'), tipo: '', prio: 'Alta' },
+    { hora: '9:00 – 9:15',  titulo: 'Pausa activa',                 desc: 'Levántate, agua. Revisar mensajes urgentes — máx 15 min.',             empresa: '–',           tipo: '',          prio: 'Rutina' },
+    { hora: '9:15 – 11:00', titulo: 'Bloque profundo #2',           desc: getPendienteBloque(pendientes, 'alta2'),                                empresa: getEmpresa(pendientes, 'alta2'), tipo: '', prio: 'Alta' },
+    { hora: '11:00 – 12:00', titulo: 'Limpieza del hogar',          desc: '1 hora de limpieza.',                                                  empresa: 'Personal',    tipo: '',          prio: 'Rutina' },
+    { hora: '12:00 – 14:00', titulo: 'Gym',                         desc: '1:30 – 2:00 horas.',                                                  empresa: 'Personal',    tipo: '',          prio: 'Rutina' },
+    { hora: '14:00 – 14:30', titulo: 'Comida',                      desc: 'Desconexión total.',                                                   empresa: '–',           tipo: '',          prio: 'Rutina' },
+    { hora: '14:30 – 16:00', titulo: 'Bloque tarde',                desc: getPendienteBloque(pendientes, 'media'),                                empresa: getEmpresa(pendientes, 'media'), tipo: '', prio: 'Media' },
+    { hora: '16:00 – 17:00', titulo: 'Cierre del día',              desc: 'Revisar las 3 tareas. Tachar completadas. Dar de alta pendientes nuevos en Drive.', empresa: 'Personal', tipo: '', prio: 'Rutina' },
+  ];
+
+  // Inject content rows
+  if (rsContent) {
+    base.splice(3, 0, {
+      hora: '9:15 – 10:00',
+      titulo: `Publicar Río Sonora — ${rsContent.pilar}`,
+      desc: rsContent.desc,
+      empresa: 'Río Sonora',
+      tipo: rsContent.fmt,
+      prio: 'Alta'
+    });
+  }
+  if (mcContent) {
+    base.splice(rsContent ? 5 : 4, 0, {
+      hora: '10:00 – 10:45',
+      titulo: `Publicar Mercer — ${mcContent.pilar}`,
+      desc: mcContent.desc,
+      empresa: 'Mercer',
+      tipo: mcContent.fmt,
+      prio: 'Alta'
+    });
+  }
+
+  return base;
+}
+
+function getPendienteBloque(pendientes, slot) {
+  const altas  = pendientes.filter(p => p.prio === 'Alta' && p.empresa !== 'Personal');
+  const medias = pendientes.filter(p => p.prio === 'Media' && p.empresa !== 'Personal');
+  if (slot === 'alta')  return altas[0]  ? altas[0].desc  : 'Pendiente de alta prioridad — revisar lista.';
+  if (slot === 'alta2') return altas[1]  ? altas[1].desc  : (medias[0] ? medias[0].desc : 'Pendiente — revisar lista.');
+  if (slot === 'media') return medias[0] ? medias[0].desc : (altas[2] ? altas[2].desc : 'Pendiente — revisar lista.');
+  return '';
+}
+function getEmpresa(pendientes, slot) {
+  const altas  = pendientes.filter(p => p.prio === 'Alta' && p.empresa !== 'Personal');
+  const medias = pendientes.filter(p => p.prio === 'Media' && p.empresa !== 'Personal');
+  if (slot === 'alta')  return altas[0]  ? altas[0].empresa  : '–';
+  if (slot === 'alta2') return altas[1]  ? altas[1].empresa  : (medias[0] ? medias[0].empresa : '–');
+  if (slot === 'media') return medias[0] ? medias[0].empresa : (altas[2]  ? altas[2].empresa  : '–');
+  return '–';
+}
+
+// ── PENDIENTES PARSER ─────────────────────────────────────────────────────
+function parsePendientes(text) {
+  const lines = text.split('\n').filter(l => l.includes('|') && !l.includes('---') && !l.includes('Fecha de captura'));
+  return lines.map(line => {
+    const cols = line.split('|').map(c => c.trim()).filter(Boolean);
+    if (cols.length < 7) return null;
+    const prioRaw = cols[4] || '';
+    let prio = 'Media';
+    if (prioRaw.includes('Alta') || prioRaw.includes('🔴')) prio = 'Alta';
+    else if (prioRaw.includes('Baja') || prioRaw.includes('🟢')) prio = 'Baja';
+    return {
+      empresa: cols[2] || '–',
+      area:    cols[3] || '',
+      prio,
+      estado:  cols[5] || '',
+      desc:    cols[6] || '',
+      notas:   cols[7] || '',
+    };
+  }).filter(Boolean).filter(p => p.estado === 'Pendiente' || p.estado === 'En proceso');
+}
+
+// ── CLAUDE API ────────────────────────────────────────────────────────────
+let generatedSchedule = [];
+let currentDate = todayStr();
+
+async function generatePlan() {
+  const btn = document.getElementById('btnGenerate');
+  btn.disabled = true;
+  showStatus('loading', 'Generando plan con Claude...');
+  hidePreview();
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `Eres el asistente de Adrián González Mercer. Genera un plan diario en formato JSON.
+Adrián tiene 4 empresas: Río Sonora (bacanora artesanal), Velamar (mezcal, mercado EE.UU.), CulturAgave (cajas de regalo premium sonorenses), Mercer (producción audiovisual: Studio, Producciones, Films).
+
+Calendarios de contenido:
+- Río Sonora: Lun=Producto, Mar=Proceso artesanal, Mié=Coctelería, Jue=Cultura Sonorense, Vie=Lifestyle, Sáb=Educativo
+- Mercer: Lun=El Trabajo, Mar=Criterio Creativo, Mié=El Proceso (Sony FX3/set), Jue=El Trabajo Studio, Vie=Mercer Producciones, Sáb=El Equipo
+
+Responde ÚNICAMENTE con un array JSON sin ningún texto adicional, sin markdown, sin explicaciones. Formato exacto:
+[{"hora":"7:00 – 7:20","titulo":"texto","desc":"texto corto max 15 palabras","empresa":"Personal","tipo":"","prio":"Rutina"}]
+
+Campos tipo: "" | "Imagen" | "Reel" | "Carrusel" | "Reel / Foto"
+Campos prio: "Alta" | "Media" | "Rutina"`,
+        messages: [{
+          role: 'user',
+          content: `Fecha: ${todayStr()}. Día de la semana: ${DIAS[new Date().getDay()]}.
+
+Pendientes activos de la hoja de Google Drive:
+- Lista de precios y servicios de Mercer (Media, Mercer, Administración)
+- Terminar modificación de cajas de regalo CulturAgave (Media, CulturAgave, Presentación)
+- Hacer receta crema de caramelo salado (Baja, Río Sonora, Innovación)
+- Publicar contenido Río Sonora (Alta, Marketing)
+- Publicar contenido Mercer (Alta, Marketing)
+- Publicar contenido Velamar (Alta, Marketing)
+- Publicar contenido CulturAgave (Alta, Marketing)
+- Limpieza del hogar 1 hora (Alta, Personal, diaria)
+- Gym 12:00-2:00pm (Alta, Personal, 4 días/semana)
+- Comer 2:30-3:30pm (Alta, Personal, diaria)
+- Revisar y dar de alta pendientes en Drive (Alta, Personal, diaria)
+
+Genera el plan del día con bloques por hora desde las 7:00am hasta las 6:00pm. Incluye las publicaciones de redes para las marcas que correspondan hoy según el calendario. Para las publicaciones incluye en "desc" el pilar y qué tipo de contenido visual producir (muy breve). Incluye rutinas de gym, comida, limpieza y cierre del día.`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const raw = data.content?.[0]?.text || '[]';
+
+    let schedule;
+    try {
+      const clean = raw.replace(/```json|```/g, '').trim();
+      schedule = JSON.parse(clean);
+    } catch(e) {
+      // Fallback to hardcoded schedule
+      schedule = buildFallbackSchedule();
+    }
+
+    generatedSchedule = schedule;
+    renderPreview(schedule);
+    showStatus('success');
+    document.getElementById('btnDownload').classList.add('visible');
+
+  } catch(err) {
+    // Fallback silently
+    const schedule = buildFallbackSchedule();
+    generatedSchedule = schedule;
+    renderPreview(schedule);
+    showStatus('success');
+    document.getElementById('btnDownload').classList.add('visible');
+  }
+
+  btn.disabled = false;
+}
+
+function buildFallbackSchedule() {
+  const rsC = RS_CONTENT[DOW];
+  const mcC = MC_CONTENT[DOW];
+  const rows = [
+    { hora:'7:00 – 7:20',  titulo:'Ritual de arranque',         desc:'Revisar pendientes y definir 3 tareas del día.',       empresa:'Personal',    tipo:'',           prio:'Rutina' },
+    { hora:'7:20 – 9:00',  titulo:'Lista de precios — Mercer',  desc:'Crear versión 1.0: Studio, Producciones y Films.',     empresa:'Mercer',      tipo:'',           prio:'Alta'   },
+    { hora:'9:00 – 9:15',  titulo:'Pausa activa',               desc:'Agua, levantarse, revisar mensajes urgentes.',         empresa:'–',           tipo:'',           prio:'Rutina' },
+  ];
+  if (rsC) rows.push({ hora:'9:15 – 10:00', titulo:`Río Sonora — ${rsC.pilar}`, desc: rsC.desc, empresa:'Río Sonora', tipo: rsC.fmt, prio:'Alta' });
+  if (mcC) rows.push({ hora:'10:00 – 10:45', titulo:`Mercer — ${mcC.pilar}`,  desc: mcC.desc,  empresa:'Mercer',    tipo: mcC.fmt, prio:'Alta' });
+  rows.push(
+    { hora:'11:00 – 12:00', titulo:'Limpieza del hogar',        desc:'1 hora.',                                              empresa:'Personal',    tipo:'',           prio:'Rutina' },
+    { hora:'12:00 – 14:00', titulo:'Gym',                       desc:'1:30 – 2:00 horas.',                                  empresa:'Personal',    tipo:'',           prio:'Rutina' },
+    { hora:'14:00 – 14:30', titulo:'Comida',                    desc:'Desconexión total.',                                   empresa:'–',           tipo:'',           prio:'Rutina' },
+    { hora:'14:30 – 16:00', titulo:'Cajas de regalo — CulturAgave', desc:'Definir cambios y acciones concretas.',           empresa:'CulturAgave', tipo:'',           prio:'Media'  },
+    { hora:'16:00 – 17:00', titulo:'Cierre del día',            desc:'Tachar completadas. Dar de alta pendientes en Drive.',empresa:'Personal',    tipo:'',           prio:'Rutina' },
+  );
+  return rows;
+}
+
+// ── RENDER PREVIEW ────────────────────────────────────────────────────────
+function renderPreview(schedule) {
+  const list = document.getElementById('previewList');
+  const card = document.getElementById('previewCard');
+  document.getElementById('actCount').textContent = `${schedule.length} actividades`;
+  list.innerHTML = '';
+
+  schedule.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'activity-row';
+
+    const prioClass = item.prio === 'Alta' ? 'tag-alta' : item.prio === 'Media' ? 'tag-media' : 'tag-rutina';
+
+    div.innerHTML = `
+      <div class="row-time">${item.hora}</div>
+      <div class="row-content">
+        <div class="row-title">${item.titulo}</div>
+        ${item.desc ? `<div class="row-desc">${item.desc}</div>` : ''}
+        <div class="row-tags">
+          ${item.empresa && item.empresa !== '–' ? `<span class="tag tag-empresa">${item.empresa}</span>` : ''}
+          ${item.tipo ? `<span class="tag tag-content">${item.tipo}</span>` : ''}
+          <span class="tag ${prioClass}">${item.prio}</span>
+        </div>
+      </div>`;
+    list.appendChild(div);
+  });
+
+  card.classList.add('visible');
+}
+
+function hidePreview() {
+  document.getElementById('previewCard').classList.remove('visible');
+  document.getElementById('btnDownload').classList.remove('visible');
+}
+
+// ── STATUS ────────────────────────────────────────────────────────────────
+function showStatus(type, text) {
+  ['loading','success','error'].forEach(t => document.getElementById(`status${t.charAt(0).toUpperCase()+t.slice(1)}`).style.display = 'none');
+  const el = document.getElementById(`status${type.charAt(0).toUpperCase()+type.slice(1)}`);
+  el.style.display = 'flex';
+  if (text && document.getElementById('statusText')) document.getElementById('statusText').textContent = text;
+}
+
+// ── PDF GENERATION ────────────────────────────────────────────────────────
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+
+  const W = 215.9, margin = 15;
+  const colW = [28, 72, 26, 28, 20];
+  let y = 0;
+
+  // Header
+  doc.setFillColor(26, 46, 68);
+  doc.rect(0, 0, W, 32, 'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(18);
+  doc.setTextColor(255,255,255);
+  doc.text('Plan del Día', margin, 14);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.setTextColor(180,200,220);
+  doc.text(currentDate + '  ·  Adrián González Mercer', margin, 22);
+  doc.setTextColor(120,150,180);
+  doc.setFontSize(8);
+  doc.text('Río Sonora · Velamar · CulturAgave · Mercer', margin, 29);
+
+  y = 42;
+
+  // Table header
+  const headers = ['Hora','Actividad','Empresa','Contenido','Prior.'];
+  doc.setFillColor(43, 77, 111);
+  doc.rect(margin, y, W - margin*2, 8, 'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(8);
+  doc.setTextColor(255,255,255);
+  let cx = margin + 2;
+  headers.forEach((h, i) => {
+    doc.text(h, cx + (i === 1 ? 0 : colW[i]/2 - doc.getTextWidth(h)/2), y + 5.5);
+    cx += colW[i];
+  });
+  y += 8;
+
+  // Rows
+  const ALTA_BG  = [247,197,197], ALTA_TX  = [113,43,19];
+  const MED_BG   = [250,238,218], MED_TX   = [99,56,6];
+  const RUT_BG   = [225,245,238], RUT_TX   = [8,80,65];
+  const CON_BG   = [230,241,251], CON_TX   = [12,68,124];
+
+  generatedSchedule.forEach((item, idx) => {
+    const rowH = 10;
+    const rowBg = idx % 2 === 0 ? [245,248,252] : [255,255,255];
+
+    // Row bg
+    doc.setFillColor(...rowBg);
+    doc.rect(margin, y, W - margin*2, rowH, 'F');
+
+    // Prio cell bg
+    let prioBg = RUT_BG, prioTx = RUT_TX;
+    if (item.prio === 'Alta')  { prioBg = ALTA_BG; prioTx = ALTA_TX; }
+    if (item.prio === 'Media') { prioBg = MED_BG;  prioTx = MED_TX;  }
+    doc.setFillColor(...prioBg);
+    doc.rect(margin + colW[0]+colW[1]+colW[2]+colW[3], y, colW[4], rowH, 'F');
+
+    // Content type cell bg
+    if (item.tipo) {
+      doc.setFillColor(...CON_BG);
+      doc.rect(margin + colW[0]+colW[1]+colW[2], y, colW[3], rowH, 'F');
+    }
+
+    // Border
+    doc.setDrawColor(221,227,234);
+    doc.rect(margin, y, W - margin*2, rowH);
+
+    // Text
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    doc.setTextColor(136,136,136);
+    doc.text(item.hora, margin + 2, y + 6.5);
+
+    doc.setTextColor(26, 46, 68);
+    doc.setFont('helvetica', item.prio === 'Alta' ? 'bold' : 'normal');
+    const titleLines = doc.splitTextToSize(item.titulo, colW[1] - 3);
+    doc.text(titleLines[0], margin + colW[0] + 2, y + 6.5);
+
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7);
+    doc.setTextColor(136,136,136);
+    if (titleLines.length > 1 || item.desc) {
+      const shortDesc = (item.desc || '').substring(0, 55);
+      doc.text(shortDesc, margin + colW[0] + 2, y + 9.5 > y + rowH ? y + rowH - 1 : y + 9);
+    }
+
+    // Empresa
+    doc.setFontSize(8);
+    doc.setTextColor(136,136,136);
+    const empStr = item.empresa || '–';
+    doc.text(empStr, margin + colW[0]+colW[1] + colW[2]/2 - doc.getTextWidth(empStr)/2, y + 6.5);
+
+    // Tipo
+    if (item.tipo) {
+      doc.setTextColor(...CON_TX);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(7);
+      const tipoStr = item.tipo;
+      doc.text(tipoStr, margin + colW[0]+colW[1]+colW[2] + colW[3]/2 - doc.getTextWidth(tipoStr)/2, y + 6.5);
+    }
+
+    // Prio
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...prioTx);
+    const prioStr = item.prio;
+    doc.text(prioStr, margin + colW[0]+colW[1]+colW[2]+colW[3] + colW[4]/2 - doc.getTextWidth(prioStr)/2, y + 6.5);
+
+    y += rowH;
+  });
+
+  // Footer
+  y += 8;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(180,180,180);
+  doc.text(`Generado por Claude · Sistema de Gestión Adrián González Mercer · ${currentDate}`, W/2, y, {align:'center'});
+
+  doc.save(`${todayFilename()}.pdf`);
+}
+</script>
+
+</body>
+</html>
