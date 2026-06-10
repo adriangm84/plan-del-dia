@@ -12,98 +12,86 @@
   <link rel="apple-touch-icon" href="/plan-del-dia/icon.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing:border-box; margin:0; padding:0; }
     :root {
-      --navy: #1A2E44; --navy2: #2B4D6F; --teal: #0F6E56; --amber: #BA7517;
-      --gray: #888; --light: #F5F8FC; --border: #DDE3EA; --white: #fff;
-      --alta-bg: #F7C5C5; --alta-tx: #712B13;
-      --med-bg: #FAEEDA;  --med-tx: #633806;
-      --rut-bg: #E1F5EE;  --rut-tx: #085041;
-      --con-bg: #E6F1FB;  --con-tx: #0C447C;
-      --radius: 14px;
+      --navy:#1A2E44; --navy2:#2B4D6F; --teal:#0F6E56;
+      --gray:#888; --light:#F5F8FC; --border:#DDE3EA; --white:#fff;
+      --alta-bg:#F7C5C5; --alta-tx:#712B13;
+      --med-bg:#FAEEDA;  --med-tx:#633806;
+      --rut-bg:#E1F5EE;  --rut-tx:#085041;
+      --con-bg:#E6F1FB;  --con-tx:#0C447C;
+      --radius:14px;
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--light); color: var(--navy); min-height: 100dvh; padding-bottom: 40px; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--light); color:var(--navy); min-height:100dvh; padding-bottom:40px; }
 
-    .header { background: var(--navy); padding: 52px 20px 24px; position: relative; overflow: hidden; }
+    .header { background:var(--navy); padding:52px 20px 24px; position:relative; overflow:hidden; }
     .header::before { content:''; position:absolute; top:-40px; right:-40px; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,0.04); }
     .header-label { font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.5); margin-bottom:6px; }
     .header-title { font-size:26px; font-weight:700; color:#fff; line-height:1.2; margin-bottom:4px; }
     .header-date  { font-size:13px; color:rgba(255,255,255,0.6); }
 
-    .main { padding: 20px 16px 0; }
+    .main { padding:20px 16px 0; }
 
-    /* AUTH CARD */
-    .auth-card { background:#fff; border-radius:var(--radius); padding:20px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
-    .auth-card h2 { font-size:15px; font-weight:600; color:var(--navy); margin-bottom:4px; }
-    .auth-card p  { font-size:13px; color:var(--gray); margin-bottom:16px; line-height:1.5; }
+    .card { background:#fff; border-radius:var(--radius); padding:20px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+    .card h2 { font-size:15px; font-weight:600; color:var(--navy); margin-bottom:4px; }
+    .card p  { font-size:13px; color:var(--gray); margin-bottom:16px; line-height:1.5; }
 
     .user-info { display:flex; align-items:center; gap:12px; padding:10px 14px; background:var(--rut-bg); border-radius:10px; margin-bottom:14px; }
     .user-info img { width:36px; height:36px; border-radius:50%; }
-    .user-info-text .name  { font-size:13px; font-weight:500; color:var(--navy); }
-    .user-info-text .email { font-size:11px; color:var(--gray); }
+    .user-name  { font-size:13px; font-weight:500; color:var(--navy); }
+    .user-email { font-size:11px; color:var(--gray); }
 
-    /* BUTTONS */
-    .btn { width:100%; padding:15px; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; transition:opacity 0.15s, transform 0.1s; -webkit-tap-highlight-color:transparent; margin-bottom:10px; }
+    .btn { width:100%; padding:15px; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; transition:opacity 0.15s,transform 0.1s; -webkit-tap-highlight-color:transparent; margin-bottom:10px; }
     .btn:active { opacity:0.85; transform:scale(0.98); }
     .btn:disabled { opacity:0.45; cursor:not-allowed; }
-    .btn-navy  { background:var(--navy);  color:#fff; }
-    .btn-teal  { background:var(--teal);  color:#fff; }
-    .btn-gray  { background:var(--light); color:var(--gray); border:0.5px solid var(--border); }
-    .btn svg { width:20px; height:20px; flex-shrink:0; }
+    .btn-navy { background:var(--navy); color:#fff; }
+    .btn-teal { background:var(--teal); color:#fff; }
+    .btn-gray { background:var(--light); color:var(--gray); border:0.5px solid var(--border); }
+    .btn svg  { width:20px; height:20px; flex-shrink:0; }
 
-    /* GEN CARD */
-    .gen-card { background:#fff; border-radius:var(--radius); padding:20px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
-    .gen-card h2 { font-size:15px; font-weight:600; color:var(--navy); margin-bottom:4px; }
-    .gen-card p  { font-size:13px; color:var(--gray); margin-bottom:16px; line-height:1.5; }
+    .drive-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; padding:4px 10px; border-radius:20px; margin-bottom:12px; }
+    .drive-badge.on  { background:var(--rut-bg); color:var(--rut-tx); }
+    .drive-badge.off { background:var(--alta-bg); color:var(--alta-tx); }
 
-    /* STATUS */
     .status { display:none; align-items:center; gap:10px; padding:12px 16px; border-radius:10px; font-size:13px; margin-top:12px; }
-    .status.show { display:flex; }
+    .status.show    { display:flex; }
     .status.loading { background:var(--con-bg); color:var(--con-tx); }
     .status.success { background:var(--rut-bg); color:var(--rut-tx); }
     .status.error   { background:var(--alta-bg); color:var(--alta-tx); }
     .spinner { width:18px; height:18px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
     @keyframes spin { to { transform:rotate(360deg); } }
 
-    /* PREVIEW */
     .preview-card { background:#fff; border-radius:var(--radius); box-shadow:0 1px 4px rgba(0,0,0,0.06); overflow:hidden; margin-bottom:16px; display:none; }
     .preview-card.visible { display:block; }
-    .preview-header { background:var(--navy); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; }
-    .preview-header span { font-size:12px; font-weight:600; color:rgba(255,255,255,0.8); text-transform:uppercase; letter-spacing:0.07em; }
-    .preview-header .count { font-size:11px; background:rgba(255,255,255,0.15); color:#fff; padding:2px 8px; border-radius:20px; }
+    .preview-hdr { background:var(--navy); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; }
+    .preview-hdr span { font-size:12px; font-weight:600; color:rgba(255,255,255,0.8); text-transform:uppercase; letter-spacing:0.07em; }
+    .preview-hdr .cnt { font-size:11px; background:rgba(255,255,255,0.15); color:#fff; padding:2px 8px; border-radius:20px; }
 
-    .activity-row { display:flex; align-items:flex-start; gap:12px; padding:12px 16px; border-bottom:0.5px solid var(--border); }
-    .activity-row:last-child { border-bottom:none; }
-    .activity-row:nth-child(even) { background:var(--light); }
-    .row-time    { font-size:11px; color:var(--gray); min-width:72px; padding-top:2px; line-height:1.4; }
-    .row-content { flex:1; }
-    .row-title   { font-size:13px; font-weight:500; color:var(--navy); line-height:1.4; margin-bottom:3px; }
-    .row-desc    { font-size:11px; color:var(--gray); line-height:1.5; }
-    .row-tags    { display:flex; gap:5px; flex-wrap:wrap; margin-top:5px; }
+    .arow { display:flex; align-items:flex-start; gap:12px; padding:12px 16px; border-bottom:0.5px solid var(--border); }
+    .arow:last-child { border-bottom:none; }
+    .arow:nth-child(even) { background:var(--light); }
+    .arow-time { font-size:11px; color:var(--gray); min-width:78px; padding-top:2px; line-height:1.4; }
+    .arow-body { flex:1; }
+    .arow-title { font-size:13px; font-weight:500; color:var(--navy); line-height:1.4; margin-bottom:3px; }
+    .arow-desc  { font-size:11px; color:var(--gray); line-height:1.5; }
+    .arow-tags  { display:flex; gap:5px; flex-wrap:wrap; margin-top:5px; }
     .tag { font-size:10px; font-weight:500; padding:2px 7px; border-radius:20px; }
-    .tag-empresa { background:var(--light); color:var(--navy2); border:0.5px solid var(--border); }
-    .tag-alta    { background:var(--alta-bg); color:var(--alta-tx); }
-    .tag-media   { background:var(--med-bg);  color:var(--med-tx); }
-    .tag-rutina  { background:var(--rut-bg);  color:var(--rut-tx); }
-    .tag-content { background:var(--con-bg);  color:var(--con-tx); }
+    .tag-emp  { background:var(--light); color:var(--navy2); border:0.5px solid var(--border); }
+    .tag-alta { background:var(--alta-bg); color:var(--alta-tx); }
+    .tag-med  { background:var(--med-bg);  color:var(--med-tx); }
+    .tag-rut  { background:var(--rut-bg);  color:var(--rut-tx); }
+    .tag-con  { background:var(--con-bg);  color:var(--con-tx); }
 
-    .btn-download { width:calc(100% - 32px); margin:0 16px 20px; padding:14px; background:var(--teal); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; display:none; align-items:center; justify-content:center; gap:10px; -webkit-tap-highlight-color:transparent; }
-    .btn-download.visible { display:flex; }
-    .btn-download:active { opacity:0.85; }
+    .btn-dl { width:calc(100% - 32px); margin:0 16px 20px; padding:14px; background:var(--teal); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; display:none; align-items:center; justify-content:center; gap:10px; -webkit-tap-highlight-color:transparent; }
+    .btn-dl.visible { display:flex; }
+    .btn-dl:active { opacity:0.85; }
 
-    /* INSTALL HINT */
-    .install-banner { background:var(--navy2); border-radius:var(--radius); padding:14px 16px; margin-bottom:20px; display:none; gap:12px; align-items:flex-start; }
-    .install-banner.show { display:flex; }
-    .install-banner svg { width:22px; height:22px; flex-shrink:0; color:rgba(255,255,255,0.7); margin-top:1px; }
-    .install-banner p { font-size:12px; color:rgba(255,255,255,0.8); line-height:1.5; }
-    .install-banner strong { color:#fff; }
+    .install-hint { background:var(--navy2); border-radius:var(--radius); padding:14px 16px; margin-bottom:20px; display:none; gap:12px; align-items:flex-start; }
+    .install-hint.show { display:flex; }
+    .install-hint p { font-size:12px; color:rgba(255,255,255,0.8); line-height:1.5; }
+    .install-hint strong { color:#fff; }
 
     .footer { text-align:center; font-size:11px; color:var(--gray); padding:0 16px; line-height:1.6; margin-top:8px; }
-
-    /* DRIVE STATUS */
-    .drive-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; padding:4px 10px; border-radius:20px; margin-bottom:12px; }
-    .drive-badge.connected    { background:var(--rut-bg); color:var(--rut-tx); }
-    .drive-badge.disconnected { background:var(--alta-bg); color:var(--alta-tx); }
   </style>
 </head>
 <body>
@@ -111,440 +99,345 @@
 <div class="header">
   <div class="header-label">Sistema de Gestión</div>
   <div class="header-title">Plan del Día</div>
-  <div class="header-date" id="headerDate">Cargando...</div>
+  <div class="header-date" id="hDate">Cargando...</div>
 </div>
 
 <div class="main">
 
-  <!-- Install hint iOS -->
-  <div class="install-banner" id="installBanner">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+  <div class="install-hint" id="installHint">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.7)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
     <p>Para instalar: toca <strong>Compartir</strong> → <strong>Agregar a pantalla de inicio</strong></p>
   </div>
 
-  <!-- AUTH CARD -->
-  <div class="auth-card" id="authCard">
+  <!-- AUTH -->
+  <div class="card" id="authCard">
     <h2>Conectar Google Drive</h2>
-    <p>Inicia sesión con tu cuenta de Google para que la app lea tus pendientes automáticamente.</p>
+    <p>Inicia sesión para que la app lea tus pendientes en tiempo real.</p>
     <div class="user-info" id="userInfo" style="display:none;">
-      <img id="userAvatar" src="" alt="Avatar">
-      <div class="user-info-text">
-        <div class="name"  id="userName"></div>
-        <div class="email" id="userEmail"></div>
-      </div>
+      <img id="uAvatar" src="" alt="">
+      <div><div class="user-name" id="uName"></div><div class="user-email" id="uEmail"></div></div>
     </div>
     <button class="btn btn-navy" id="btnLogin" onclick="handleLogin()">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
       Iniciar sesión con Google
     </button>
-    <button class="btn btn-gray" id="btnLogout" onclick="handleLogout()" style="display:none;">
-      Cerrar sesión
-    </button>
+    <button class="btn btn-gray" id="btnLogout" onclick="handleLogout()" style="display:none;">Cerrar sesión</button>
   </div>
 
-  <!-- GENERATE CARD -->
-  <div class="gen-card" id="genCard" style="display:none;">
+  <!-- GENERATE -->
+  <div class="card" id="genCard" style="display:none;">
     <h2>Generar plan de hoy</h2>
-    <div class="drive-badge disconnected" id="driveBadge">
-      <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
-      Drive desconectado
-    </div>
-    <p id="genDesc">Lee tus pendientes activos en Drive y genera el plan del día.</p>
-    <button class="btn btn-navy" id="btnGenerate" onclick="generatePlan()">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    <div class="drive-badge off" id="driveBadge">Drive desconectado</div>
+    <p>Lee tus pendientes actualizados en Drive y genera el plan del día.</p>
+    <button class="btn btn-navy" id="btnGen" onclick="generatePlan()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       Generar plan del día
     </button>
-    <div class="status loading" id="statusLoading">
-      <div class="spinner"></div>
-      <span id="statusText">Leyendo Drive...</span>
-    </div>
-    <div class="status success" id="statusSuccess">
-      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-      <span>Plan generado. Descarga el PDF abajo.</span>
-    </div>
-    <div class="status error" id="statusError">
-      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-      <span id="errorText">Error al generar.</span>
-    </div>
+    <div class="status loading" id="stLoad"><div class="spinner"></div><span id="stTxt">Leyendo Drive...</span></div>
+    <div class="status success" id="stOk"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Plan generado. Descarga el PDF abajo.</div>
+    <div class="status error"   id="stErr"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg><span id="stErrTxt">Error.</span></div>
   </div>
 
   <!-- PREVIEW -->
   <div class="preview-card" id="previewCard">
-    <div class="preview-header">
-      <span>Vista previa</span>
-      <span class="count" id="actCount">0 actividades</span>
-    </div>
+    <div class="preview-hdr"><span>Vista previa</span><span class="cnt" id="actCnt">0</span></div>
     <div id="previewList"></div>
   </div>
 
-  <!-- DOWNLOAD -->
-  <button class="btn-download" id="btnDownload" onclick="downloadPDF()">
+  <button class="btn-dl" id="btnDl" onclick="downloadPDF()">
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
     Descargar PDF
   </button>
 
-  <div class="footer">
-    Río Sonora · Velamar · CulturAgave · Mercer<br>
-    Sistema de Gestión · Adrián González Mercer
-  </div>
+  <div class="footer">Río Sonora · Velamar · CulturAgave · Mercer<br>Sistema de Gestión · Adrián González Mercer</div>
 </div>
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────
-const CLIENT_ID   = '50982534387-q1nr7ar063jgogenfc77q1qlklbba9mp.apps.googleusercontent.com';
-const SHEET_ID    = '123Nrb09AQRpC7la2e9-W6-Sdo9eMst_OZa8HyBCtFeI';
-const SCOPES      = 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/spreadsheets.readonly';
+const CLIENT_ID = '50982534387-q1nr7ar063jgogenfc77q1qlklbba9mp.apps.googleusercontent.com';
+const SHEET_ID  = '123Nrb09AQRpC7la2e9-W6-Sdo9eMst_OZa8HyBCtFeI';
+const SCOPES    = 'https://www.googleapis.com/auth/spreadsheets.readonly';
 
-// ── DATE UTILS ────────────────────────────────────────────────────────────
+// ── DATE ──────────────────────────────────────────────────────────────────
 const DIAS  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DOW   = new Date().getDay();
-
-function todayStr() {
-  const d = new Date();
-  return `${DIAS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}, ${d.getFullYear()}`;
-}
-function todayFile() {
-  const d = new Date();
-  return `Plan_${DIAS[d.getDay()]}_${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}${d.getFullYear()}`;
-}
-
-document.getElementById('headerDate').textContent = todayStr();
-
-// Install hint iOS
-const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-if (isIOS && !window.navigator.standalone) {
-  document.getElementById('installBanner').classList.add('show');
-}
-
-// ── GOOGLE OAUTH (GIS) ────────────────────────────────────────────────────
-let tokenClient;
-let accessToken = null;
-let currentUser = null;
-
-// Load Google Identity Services
-function loadGIS() {
-  return new Promise(resolve => {
-    if (window.google?.accounts) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
-    s.onload = resolve;
-    document.head.appendChild(s);
-  });
-}
-
-async function initGIS() {
-  await loadGIS();
-
-  // Check stored token
-  const stored = sessionStorage.getItem('gToken');
-  const storedUser = sessionStorage.getItem('gUser');
-  if (stored && storedUser) {
-    accessToken = stored;
-    currentUser = JSON.parse(storedUser);
-    showLoggedIn();
-    return;
-  }
-
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: async (resp) => {
-      if (resp.error) { showError('Error de autenticación: ' + resp.error); return; }
-      accessToken = resp.access_token;
-      await fetchUserInfo();
-      sessionStorage.setItem('gToken', accessToken);
-    }
-  });
-}
-
-async function handleLogin() {
-  if (!tokenClient) await initGIS();
-  tokenClient.requestAccessToken({ prompt: 'consent' });
-}
-
-function handleLogout() {
-  if (accessToken) google.accounts.oauth2.revoke(accessToken);
-  accessToken = null; currentUser = null;
-  sessionStorage.removeItem('gToken');
-  sessionStorage.removeItem('gUser');
-  showLoggedOut();
-}
-
-async function fetchUserInfo() {
-  try {
-    const r = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
-    currentUser = await r.json();
-    sessionStorage.setItem('gUser', JSON.stringify(currentUser));
-    showLoggedIn();
-  } catch(e) { showError('No se pudo obtener info del usuario.'); }
-}
-
-function showLoggedIn() {
-  document.getElementById('btnLogin').style.display  = 'none';
-  document.getElementById('btnLogout').style.display = 'block';
-  const ui = document.getElementById('userInfo');
-  ui.style.display = 'flex';
-  document.getElementById('userName').textContent  = currentUser?.name  || 'Adrián';
-  document.getElementById('userEmail').textContent = currentUser?.email || '';
-  if (currentUser?.picture) document.getElementById('userAvatar').src = currentUser.picture;
-  // Show generate card
-  document.getElementById('genCard').style.display = 'block';
-  document.getElementById('driveBadge').className = 'drive-badge connected';
-  document.getElementById('driveBadge').innerHTML = `<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Drive conectado`;
-}
-
-function showLoggedOut() {
-  document.getElementById('btnLogin').style.display  = 'block';
-  document.getElementById('btnLogout').style.display = 'none';
-  document.getElementById('userInfo').style.display  = 'none';
-  document.getElementById('genCard').style.display   = 'none';
-  document.getElementById('previewCard').classList.remove('visible');
-  document.getElementById('btnDownload').classList.remove('visible');
-}
+function todayStr() { const d=new Date(); return `${DIAS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}, ${d.getFullYear()}`; }
+function todayFile(){ const d=new Date(); return `Plan_${DIAS[d.getDay()]}_${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}${d.getFullYear()}`; }
+document.getElementById('hDate').textContent = todayStr();
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone)
+  document.getElementById('installHint').classList.add('show');
 
 // ── CONTENT CALENDAR ─────────────────────────────────────────────────────
 const RS_CAL = {
-  1:{pilar:'Producto',         desc:'Foto del Bacanora Blanco o Crema. Botella como protagonista.',fmt:'Imagen'},
-  2:{pilar:'Proceso artesanal',desc:'Reel de agave, destilación o manos del maestro destilador.',  fmt:'Reel'},
-  3:{pilar:'Coctelería',       desc:'Imagen de receta o maridaje de Bacanora con comida sonorense.',fmt:'Imagen'},
-  4:{pilar:'Cultura Sonorense',desc:'Foto o reel de paisaje, tradición o gastronomía de Sonora.',  fmt:'Foto/Reel'},
-  5:{pilar:'Lifestyle',        desc:'Foto de momento de consumo: asado, atardecer, reunión.',       fmt:'Imagen'},
-  6:{pilar:'Educativo',        desc:'Reel corto: ¿qué es el bacanora? Dato rápido 15 seg.',         fmt:'Reel'},
+  1:{p:'Producto',         d:'Foto del Bacanora Blanco o Crema. Botella como protagonista.',         f:'Imagen'},
+  2:{p:'Proceso artesanal',d:'Reel de agave, destilación o manos del maestro destilador.',           f:'Reel'},
+  3:{p:'Coctelería',       d:'Imagen de receta o maridaje de Bacanora con comida sonorense.',         f:'Imagen'},
+  4:{p:'Cultura Sonorense',d:'Foto o reel de paisaje, tradición o gastronomía de Sonora.',           f:'Foto/Reel'},
+  5:{p:'Lifestyle',        d:'Foto de momento de consumo: asado, atardecer, reunión.',               f:'Imagen'},
+  6:{p:'Educativo',        d:'Reel corto: ¿qué es el bacanora? Dato rápido 15 seg.',                 f:'Reel'},
 };
 const MC_CAL = {
-  1:{pilar:'El Trabajo',          desc:'Foto o fragmento de proyecto reciente. Still de producción.',  fmt:'Foto/Reel'},
-  2:{pilar:'Criterio Creativo',   desc:'Carrusel con punto de vista sobre producción o dirección.',    fmt:'Carrusel'},
-  3:{pilar:'El Proceso',          desc:'Reel o foto de Sony FX3 en set, iluminación o configuración.', fmt:'Reel/Foto'},
-  4:{pilar:'El Trabajo — Studio', desc:'Foto o reel de producción empresarial. Publicar en LinkedIn.', fmt:'Foto/Reel'},
-  5:{pilar:'Mercer Producciones', desc:'Fragmento de videoclip o proceso de rodaje musical.',          fmt:'Reel'},
-  6:{pilar:'El Equipo',           desc:'Contenido técnico: Sony FX3, lentes o setup favorito.',        fmt:'Reel/Foto'},
+  1:{p:'El Trabajo',          d:'Foto o fragmento de proyecto reciente. Still de producción.',        f:'Foto/Reel'},
+  2:{p:'Criterio Creativo',   d:'Carrusel con punto de vista sobre producción o dirección.',          f:'Carrusel'},
+  3:{p:'El Proceso',          d:'Reel o foto de Sony FX3 en set, iluminación o configuración.',       f:'Reel/Foto'},
+  4:{p:'El Trabajo — Studio', d:'Foto o reel de producción empresarial. Publicar también en LinkedIn.',f:'Foto/Reel'},
+  5:{p:'Mercer Producciones', d:'Fragmento de videoclip o proceso de rodaje musical.',                f:'Reel'},
+  6:{p:'El Equipo',           d:'Contenido técnico: Sony FX3, lentes o setup favorito.',             f:'Reel/Foto'},
 };
 
-// ── READ DRIVE ────────────────────────────────────────────────────────────
-async function readPendientes() {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A:H?key=&majorDimension=ROWS`;
-  const r = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A1:H200`,
-    { headers: { Authorization: `Bearer ${accessToken}` } }
-  );
-  if (!r.ok) throw new Error('No se pudo leer el Sheet: ' + r.status);
-  const data = await r.json();
-  const rows = data.values || [];
+// ── OAUTH ─────────────────────────────────────────────────────────────────
+let tokenClient, accessToken=null, currentUser=null;
 
-  // Find header row
-  let headerIdx = rows.findIndex(r => r.some(c => c && c.toLowerCase().includes('descripci')));
-  if (headerIdx < 0) headerIdx = 0;
+function loadGIS(){ return new Promise(r=>{ if(window.google?.accounts){r();return;} const s=document.createElement('script'); s.src='https://accounts.google.com/gsi/client'; s.onload=r; document.head.appendChild(s); }); }
 
-  const pendientes = [];
-  for (let i = headerIdx + 1; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row || row.length < 6) continue;
-    // Columns: Fecha captura, Fecha límite, Empresa, Área, Prioridad, Estado, Descripción, Notas
-    const empresa  = (row[2] || '').trim();
-    const prioRaw  = (row[4] || '').toLowerCase();
-    const estado   = (row[5] || '').trim();
-    const desc     = (row[6] || '').trim();
-    const notas    = (row[7] || '').trim();
-    const fechaLim = (row[1] || '').trim();
-
-    if (!desc) continue;
-    if (!['pendiente','en proceso'].includes(estado.toLowerCase())) continue;
-
-    let prio = 'Media';
-    if (prioRaw.includes('alta') || prioRaw.includes('🔴')) prio = 'Alta';
-    else if (prioRaw.includes('baja') || prioRaw.includes('🟢')) prio = 'Baja';
-
-    pendientes.push({ empresa, prio, estado, desc, notas, fechaLim });
-  }
-  return pendientes;
+async function initGIS(){
+  await loadGIS();
+  const t=sessionStorage.getItem('gToken'), u=sessionStorage.getItem('gUser');
+  if(t&&u){ accessToken=t; currentUser=JSON.parse(u); showLoggedIn(); return; }
+  tokenClient=google.accounts.oauth2.initTokenClient({ client_id:CLIENT_ID, scope:SCOPES,
+    callback:async(resp)=>{ if(resp.error){showErr('Auth error: '+resp.error);return;} accessToken=resp.access_token; await fetchUser(); sessionStorage.setItem('gToken',accessToken); }
+  });
 }
 
-// ── BUILD SCHEDULE ────────────────────────────────────────────────────────
-function buildSchedule(pendientes) {
-  const altasWork  = pendientes.filter(p => p.prio === 'Alta'  && p.empresa !== 'Personal');
-  const mediasWork = pendientes.filter(p => p.prio === 'Media' && p.empresa !== 'Personal');
-  const rsC = RS_CAL[DOW];
-  const mcC = MC_CAL[DOW];
+async function handleLogin(){ if(!tokenClient)await initGIS(); tokenClient.requestAccessToken({prompt:'consent'}); }
+function handleLogout(){ if(accessToken)google.accounts.oauth2.revoke(accessToken); accessToken=null; currentUser=null; sessionStorage.clear(); showLoggedOut(); }
 
-  const schedule = [
-    { hora:'7:00 – 7:20',  titulo:'Ritual de arranque',    desc:'Revisar pendientes y definir 3 tareas del día. Sin teléfono.', empresa:'Personal', tipo:'', prio:'Rutina' },
-  ];
-
-  // Bloque profundo #1 — primer pendiente Alta
-  if (altasWork[0]) {
-    schedule.push({ hora:'7:20 – 9:00', titulo:altasWork[0].desc, desc: altasWork[0].empresa + (altasWork[0].notas ? ' · ' + altasWork[0].notas : ''), empresa:altasWork[0].empresa, tipo:'', prio:'Alta' });
-  }
-
-  schedule.push({ hora:'9:00 – 9:15', titulo:'Pausa activa', desc:'Agua, camina. Revisar mensajes urgentes — máx 15 min.', empresa:'–', tipo:'', prio:'Rutina' });
-
-  // Publicación Río Sonora
-  if (rsC) schedule.push({ hora:'9:15 – 10:00', titulo:`Río Sonora — ${rsC.pilar}`, desc:rsC.desc, empresa:'Río Sonora', tipo:rsC.fmt, prio:'Alta' });
-  // Publicación Mercer
-  if (mcC) schedule.push({ hora:'10:00 – 10:45', titulo:`Mercer — ${mcC.pilar}`, desc:mcC.desc, empresa:'Mercer', tipo:mcC.fmt, prio:'Alta' });
-
-  // Bloque profundo #2 — segundo pendiente Alta o primero Media
-  const bloque2 = altasWork[1] || mediasWork[0];
-  if (bloque2) {
-    schedule.push({ hora:'10:45 – 12:00', titulo:bloque2.desc, desc:bloque2.empresa + (bloque2.notas ? ' · ' + bloque2.notas : ''), empresa:bloque2.empresa, tipo:'', prio:bloque2.prio });
-  }
-
-  schedule.push(
-    { hora:'12:00 – 14:00', titulo:'Gym', desc:'1:30 – 2:00 horas.', empresa:'Personal', tipo:'', prio:'Rutina' },
-    { hora:'14:00 – 14:30', titulo:'Comida', desc:'Desconexión total.', empresa:'–', tipo:'', prio:'Rutina' },
-  );
-
-  // Bloque tarde — pendientes media restantes
-  const bloque3 = mediasWork[1] || mediasWork[0] || altasWork[2];
-  if (bloque3 && bloque3 !== bloque2) {
-    schedule.push({ hora:'14:30 – 16:00', titulo:bloque3.desc, desc:bloque3.empresa + (bloque3.notas ? ' · ' + bloque3.notas : ''), empresa:bloque3.empresa, tipo:'', prio:bloque3.prio });
-  }
-
-  schedule.push({ hora:'16:00 – 17:00', titulo:'Cierre del día', desc:'Tachar completadas. Dar de alta pendientes nuevos en Drive.', empresa:'Personal', tipo:'', prio:'Rutina' });
-
-  return schedule;
+async function fetchUser(){
+  const r=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:`Bearer ${accessToken}`}});
+  currentUser=await r.json(); sessionStorage.setItem('gUser',JSON.stringify(currentUser)); showLoggedIn();
 }
 
-// ── GENERATE PLAN ─────────────────────────────────────────────────────────
-let generatedSchedule = [];
+function showLoggedIn(){
+  document.getElementById('btnLogin').style.display='none';
+  document.getElementById('btnLogout').style.display='block';
+  const ui=document.getElementById('userInfo'); ui.style.display='flex';
+  document.getElementById('uName').textContent=currentUser?.name||'Adrián';
+  document.getElementById('uEmail').textContent=currentUser?.email||'';
+  if(currentUser?.picture) document.getElementById('uAvatar').src=currentUser.picture;
+  document.getElementById('genCard').style.display='block';
+  const b=document.getElementById('driveBadge'); b.className='drive-badge on';
+  b.innerHTML='<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Drive conectado';
+}
+function showLoggedOut(){
+  document.getElementById('btnLogin').style.display='block';
+  document.getElementById('btnLogout').style.display='none';
+  document.getElementById('userInfo').style.display='none';
+  document.getElementById('genCard').style.display='none';
+  document.getElementById('previewCard').classList.remove('visible');
+  document.getElementById('btnDl').classList.remove('visible');
+}
 
-async function generatePlan() {
-  if (!accessToken) { showError('Inicia sesión primero.'); return; }
-  const btn = document.getElementById('btnGenerate');
-  btn.disabled = true;
-  hideAll();
-  showStatus('loading', 'Leyendo pendientes en Drive...');
+// ── READ SHEET ────────────────────────────────────────────────────────────
+async function readSheet(){
+  const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A1:H200`,
+    {headers:{Authorization:`Bearer ${accessToken}`}});
+  if(!r.ok) throw new Error('No se pudo leer el Sheet: '+r.status);
+  const data=await r.json();
+  const rows=data.values||[];
 
-  try {
-    const pendientes = await readPendientes();
-    showStatus('loading', 'Armando el plan del día...');
-    generatedSchedule = buildSchedule(pendientes);
-    renderPreview(generatedSchedule);
+  // Find header row index
+  let hi=rows.findIndex(r=>r.some(c=>c&&c.toLowerCase().includes('descripci')));
+  if(hi<0) hi=0;
+
+  const all=[];
+  for(let i=hi+1;i<rows.length;i++){
+    const row=rows[i];
+    if(!row||row.length<6) continue;
+    // A=FechaCaptura B=FechaLimite C=Empresa D=Area E=Prioridad F=Estado G=Descripcion H=Notas
+    const empresa =(row[2]||'').trim();
+    const area    =(row[3]||'').trim();
+    const prioRaw =(row[4]||'').toLowerCase();
+    const estado  =(row[5]||'').trim().toLowerCase();
+    const desc    =(row[6]||'').trim();
+    const notas   =(row[7]||'').trim();
+
+    if(!desc) continue;
+    if(!['pendiente','en proceso'].includes(estado)) continue;
+
+    let prio='Media';
+    if(prioRaw.includes('alta')||prioRaw.includes('🔴')) prio='Alta';
+    else if(prioRaw.includes('baja')||prioRaw.includes('🟢')) prio='Baja';
+
+    all.push({empresa, area, prio, desc, notas});
+  }
+  return all;
+}
+
+// ── EXTRACT TIME FROM NOTES ───────────────────────────────────────────────
+// Tries to find a time range like "15:00 a 17:00" or "12:00 pm a 2:00 pm" in notes/desc
+function extractTime(str){
+  if(!str) return null;
+  // Match patterns like "15:00 a 17:00", "12:00 pm a 2:00 pm", "7:20 – 9:00"
+  const m = str.match(/(\d{1,2}:\d{2}(?:\s*[ap]m)?)\s*(?:a|–|-)\s*(\d{1,2}:\d{2}(?:\s*[ap]m)?)/i);
+  if(m) return `${m[1]} – ${m[2]}`;
+  return null;
+}
+
+// ── BUILD SCHEDULE FROM DRIVE DATA ────────────────────────────────────────
+function buildSchedule(all){
+  const personal = all.filter(p=>p.empresa==='Personal');
+  const work     = all.filter(p=>p.empresa!=='Personal');
+  const altasW   = work.filter(p=>p.prio==='Alta');
+  const mediasW  = work.filter(p=>p.prio==='Media');
+  const rsC=RS_CAL[DOW], mcC=MC_CAL[DOW];
+
+  // Build time-slotted schedule
+  const slots = [];
+
+  // Ritual arranque — always first
+  slots.push({hora:'7:00 – 7:20', titulo:'Ritual de arranque', desc:'Revisar pendientes y definir 3 tareas del día. Sin teléfono.', empresa:'Personal', tipo:'', prio:'Rutina'});
+
+  // Bloque profundo #1
+  if(altasW[0]) slots.push({hora:'7:20 – 9:00', titulo:altasW[0].desc, desc:altasW[0].empresa+(altasW[0].notas?' · '+altasW[0].notas:''), empresa:altasW[0].empresa, tipo:'', prio:'Alta'});
+
+  // Pausa
+  slots.push({hora:'9:00 – 9:15', titulo:'Pausa activa', desc:'Agua, camina. Mensajes urgentes — máx 15 min.', empresa:'–', tipo:'', prio:'Rutina'});
+
+  // Publicaciones de redes
+  if(rsC) slots.push({hora:'9:15 – 10:00', titulo:`Río Sonora — ${rsC.p}`, desc:rsC.d, empresa:'Río Sonora', tipo:rsC.f, prio:'Alta'});
+  if(mcC) slots.push({hora:'10:00 – 10:45', titulo:`Mercer — ${mcC.p}`, desc:mcC.d, empresa:'Mercer', tipo:mcC.f, prio:'Alta'});
+
+  // Bloque profundo #2
+  const b2=altasW[1]||mediasW[0];
+  if(b2) slots.push({hora:'10:45 – 12:00', titulo:b2.desc, desc:b2.empresa+(b2.notas?' · '+b2.notas:''), empresa:b2.empresa, tipo:'', prio:b2.prio});
+
+  // Rutinas personales — insert from Drive with their real times
+  personal.forEach(p=>{
+    const time = extractTime(p.notas) || extractTime(p.desc);
+    const hora = time || '—';
+    const esComida = p.desc.toLowerCase().includes('comer')||p.desc.toLowerCase().includes('comida');
+    const esGym    = p.desc.toLowerCase().includes('gym');
+    const esLimp   = p.desc.toLowerCase().includes('limpieza');
+    if(esComida||esGym||esLimp){
+      slots.push({hora, titulo:p.desc, desc:p.notas||'', empresa:'Personal', tipo:'', prio:'Rutina'});
+    }
+  });
+
+  // Bloque tarde — pendientes media
+  const b3=mediasW[1]||mediasW[0];
+  if(b3&&b3!==b2) slots.push({hora:'–', titulo:b3.desc, desc:b3.empresa+(b3.notas?' · '+b3.notas:''), empresa:b3.empresa, tipo:'', prio:b3.prio});
+
+  // Cierre
+  slots.push({hora:'Cierre', titulo:'Cierre del día', desc:'Tachar completadas. Dar de alta pendientes nuevos en Drive.', empresa:'Personal', tipo:'', prio:'Rutina'});
+
+  // Sort by hora (rough)
+  const toMin=h=>{
+    const m=h.match(/(\d{1,2}):(\d{2})/);
+    if(!m) return 9999;
+    let hr=parseInt(m[1]), mn=parseInt(m[2]);
+    if(h.toLowerCase().includes('pm')&&hr<12) hr+=12;
+    return hr*60+mn;
+  };
+  slots.sort((a,b)=>toMin(a.hora)-toMin(b.hora));
+
+  return slots;
+}
+
+// ── GENERATE ──────────────────────────────────────────────────────────────
+let schedule=[];
+
+async function generatePlan(){
+  if(!accessToken){showErr('Inicia sesión primero.');return;}
+  document.getElementById('btnGen').disabled=true;
+  clearStatus();
+  showStatus('loading','Leyendo Drive...');
+  document.getElementById('previewCard').classList.remove('visible');
+  document.getElementById('btnDl').classList.remove('visible');
+
+  try{
+    const all=await readSheet();
+    showStatus('loading','Armando el plan del día...');
+    schedule=buildSchedule(all);
+    renderPreview(schedule);
+    clearStatus();
     showStatus('success');
-    document.getElementById('btnDownload').classList.add('visible');
-  } catch(err) {
-    console.error(err);
-    showError('Error leyendo Drive: ' + err.message);
+    document.getElementById('btnDl').classList.add('visible');
+  }catch(e){
+    console.error(e);
+    showErr(e.message);
   }
-  btn.disabled = false;
+  document.getElementById('btnGen').disabled=false;
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
-function renderPreview(schedule) {
-  const list = document.getElementById('previewList');
-  const card = document.getElementById('previewCard');
-  document.getElementById('actCount').textContent = `${schedule.length} actividades`;
-  list.innerHTML = '';
-  schedule.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'activity-row';
-    const pc = item.prio === 'Alta' ? 'tag-alta' : item.prio === 'Media' ? 'tag-media' : 'tag-rutina';
-    div.innerHTML = `
-      <div class="row-time">${item.hora}</div>
-      <div class="row-content">
-        <div class="row-title">${item.titulo}</div>
-        ${item.desc ? `<div class="row-desc">${item.desc}</div>` : ''}
-        <div class="row-tags">
-          ${item.empresa && item.empresa !== '–' ? `<span class="tag tag-empresa">${item.empresa}</span>` : ''}
-          ${item.tipo ? `<span class="tag tag-content">${item.tipo}</span>` : ''}
-          <span class="tag ${pc}">${item.prio}</span>
-        </div>
-      </div>`;
-    list.appendChild(div);
+function renderPreview(s){
+  const list=document.getElementById('previewList');
+  document.getElementById('actCnt').textContent=s.length+' actividades';
+  list.innerHTML='';
+  s.forEach((item,i)=>{
+    const pc=item.prio==='Alta'?'tag-alta':item.prio==='Media'?'tag-med':'tag-rut';
+    const d=document.createElement('div'); d.className='arow';
+    d.innerHTML=`<div class="arow-time">${item.hora}</div>
+    <div class="arow-body">
+      <div class="arow-title">${item.titulo}</div>
+      ${item.desc?`<div class="arow-desc">${item.desc}</div>`:''}
+      <div class="arow-tags">
+        ${item.empresa&&item.empresa!=='–'?`<span class="tag tag-emp">${item.empresa}</span>`:''}
+        ${item.tipo?`<span class="tag tag-con">${item.tipo}</span>`:''}
+        <span class="tag ${pc}">${item.prio}</span>
+      </div>
+    </div>`;
+    list.appendChild(d);
   });
-  card.classList.add('visible');
+  document.getElementById('previewCard').classList.add('visible');
 }
 
-function hideAll() {
-  ['statusLoading','statusSuccess','statusError'].forEach(id => {
-    const el = document.getElementById(id);
-    el.classList.remove('show');
-    el.style.display = 'none';
-  });
-  document.getElementById('previewCard').classList.remove('visible');
-  document.getElementById('btnDownload').classList.remove('visible');
+function showStatus(t,txt){
+  const map={loading:'stLoad',success:'stOk',error:'stErr'};
+  const el=document.getElementById(map[t]); el.style.display='flex'; el.classList.add('show');
+  if(txt&&t==='loading') document.getElementById('stTxt').textContent=txt;
 }
-
-function showStatus(type, text) {
-  hideAll();
-  const map = { loading:'statusLoading', success:'statusSuccess', error:'statusError' };
-  const el = document.getElementById(map[type]);
-  el.style.display = 'flex';
-  if (text && type === 'loading') document.getElementById('statusText').textContent = text;
-}
-function showError(msg) {
-  showStatus('error');
-  document.getElementById('errorText').textContent = msg;
-}
+function clearStatus(){ ['stLoad','stOk','stErr'].forEach(id=>{ const e=document.getElementById(id); e.style.display='none'; e.classList.remove('show'); }); }
+function showErr(msg){ clearStatus(); showStatus('error'); document.getElementById('stErrTxt').textContent=msg; }
 
 // ── PDF ───────────────────────────────────────────────────────────────────
-function downloadPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'letter' });
-  const W = 215.9, M = 15;
-  const cw = [28, 70, 26, 30, 22];
-  let y = 0;
+function downloadPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'letter'});
+  const W=215.9,M=15,cw=[30,68,26,30,22];
+  let y=0;
 
-  // Header
-  doc.setFillColor(26,46,68);
-  doc.rect(0,0,W,32,'F');
+  doc.setFillColor(26,46,68); doc.rect(0,0,W,32,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(255,255,255);
-  doc.text('Plan del Día', M, 14);
+  doc.text('Plan del Día',M,14);
   doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(180,200,220);
-  doc.text(todayStr() + '  ·  Adrián González Mercer', M, 22);
+  doc.text(todayStr()+' · Adrián González Mercer',M,22);
   doc.setFontSize(8); doc.setTextColor(120,150,180);
-  doc.text('Río Sonora · Velamar · CulturAgave · Mercer', M, 29);
-  y = 42;
+  doc.text('Río Sonora · Velamar · CulturAgave · Mercer',M,29);
+  y=42;
 
-  // Table header
-  const hdrs = ['Hora','Actividad','Empresa','Contenido','Prior.'];
+  const hdrs=['Hora','Actividad','Empresa','Contenido','Prior.'];
   doc.setFillColor(43,77,111); doc.rect(M,y,W-M*2,8,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(255,255,255);
-  let cx = M+2;
-  hdrs.forEach((h,i) => { doc.text(h, cx, y+5.5); cx += cw[i]; });
-  y += 8;
+  let cx=M+2; hdrs.forEach((h,i)=>{doc.text(h,cx,y+5.5);cx+=cw[i];}); y+=8;
 
-  generatedSchedule.forEach((item, idx) => {
-    const rh = 12;
-    const rb = idx%2===0 ? [245,248,252] : [255,255,255];
+  schedule.forEach((item,idx)=>{
+    const rh=12, rb=idx%2===0?[245,248,252]:[255,255,255];
     doc.setFillColor(...rb); doc.rect(M,y,W-M*2,rh,'F');
-
     let pb=[225,245,238],pt=[8,80,65];
-    if (item.prio==='Alta')  { pb=[247,197,197]; pt=[113,43,19]; }
-    if (item.prio==='Media') { pb=[250,238,218]; pt=[99,56,6]; }
+    if(item.prio==='Alta'){pb=[247,197,197];pt=[113,43,19];}
+    if(item.prio==='Media'){pb=[250,238,218];pt=[99,56,6];}
     doc.setFillColor(...pb); doc.rect(M+cw[0]+cw[1]+cw[2]+cw[3],y,cw[4],rh,'F');
-    if (item.tipo) { doc.setFillColor(230,241,251); doc.rect(M+cw[0]+cw[1]+cw[2],y,cw[3],rh,'F'); }
-
+    if(item.tipo){doc.setFillColor(230,241,251);doc.rect(M+cw[0]+cw[1]+cw[2],y,cw[3],rh,'F');}
     doc.setDrawColor(221,227,234); doc.rect(M,y,W-M*2,rh);
-
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(136,136,136);
-    doc.text(item.hora, M+2, y+5.5);
-
-    doc.setTextColor(26,46,68); doc.setFont('helvetica', item.prio==='Alta'?'bold':'normal'); doc.setFontSize(8);
-    const tl = doc.splitTextToSize(item.titulo, cw[1]-3);
-    doc.text(tl[0], M+cw[0]+2, y+5.5);
-    if (item.desc) { doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(136,136,136); doc.text(item.desc.substring(0,52), M+cw[0]+2, y+9.5); }
-
-    doc.setFontSize(7.5); doc.setTextColor(136,136,136);
-    const es = item.empresa||'–';
-    doc.text(es, M+cw[0]+cw[1]+cw[2]/2-doc.getTextWidth(es)/2, y+5.5);
-
-    if (item.tipo) { doc.setTextColor(12,68,124); doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.text(item.tipo, M+cw[0]+cw[1]+cw[2]+cw[3]/2-doc.getTextWidth(item.tipo)/2, y+5.5); }
-
-    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...pt);
-    doc.text(item.prio, M+cw[0]+cw[1]+cw[2]+cw[3]+cw[4]/2-doc.getTextWidth(item.prio)/2, y+5.5);
-    y += rh;
+    doc.text(item.hora,M+2,y+5.5);
+    doc.setTextColor(26,46,68); doc.setFont('helvetica',item.prio==='Alta'?'bold':'normal'); doc.setFontSize(8);
+    doc.text(doc.splitTextToSize(item.titulo,cw[1]-3)[0],M+cw[0]+2,y+5.5);
+    if(item.desc){doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(136,136,136);doc.text(item.desc.substring(0,54),M+cw[0]+2,y+9.5);}
+    doc.setFontSize(7.5);doc.setTextColor(136,136,136);
+    const es=item.empresa||'–'; doc.text(es,M+cw[0]+cw[1]+cw[2]/2-doc.getTextWidth(es)/2,y+5.5);
+    if(item.tipo){doc.setTextColor(12,68,124);doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text(item.tipo,M+cw[0]+cw[1]+cw[2]+cw[3]/2-doc.getTextWidth(item.tipo)/2,y+5.5);}
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...pt);
+    doc.text(item.prio,M+cw[0]+cw[1]+cw[2]+cw[3]+cw[4]/2-doc.getTextWidth(item.prio)/2,y+5.5);
+    y+=rh;
   });
-
-  y += 8;
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(180,180,180);
-  doc.text(`Generado · Sistema de Gestión Adrián González Mercer · ${todayStr()}`, W/2, y, {align:'center'});
+  y+=8; doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(180,180,180);
+  doc.text(`Generado · Sistema de Gestión Adrián González Mercer · ${todayStr()}`,W/2,y,{align:'center'});
   doc.save(`${todayFile()}.pdf`);
 }
 
-// Init on load
 initGIS();
 </script>
 </body>
