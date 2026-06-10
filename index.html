@@ -230,7 +230,7 @@ function showLoggedOut(){
 
 // ── READ SHEET ────────────────────────────────────────────────────────────
 async function readSheet(){
-  const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A1:H200`,
+  const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A1:I200`,
     {headers:{Authorization:`Bearer ${accessToken}`}});
   if(!r.ok) throw new Error('No se pudo leer el Sheet: '+r.status);
   const data=await r.json();
@@ -244,13 +244,14 @@ async function readSheet(){
   for(let i=hi+1;i<rows.length;i++){
     const row=rows[i];
     if(!row||row.length<6) continue;
-    // A=FechaCaptura B=FechaLimite C=Empresa D=Area E=Prioridad F=Estado G=Descripcion H=Notas
+    // A=FechaCaptura B=FechaLimite C=Empresa D=Area E=Prioridad F=Estado G=Descripcion H=Horario I=Notas
     const empresa =(row[2]||'').trim();
     const area    =(row[3]||'').trim();
     const prioRaw =(row[4]||'').toLowerCase();
     const estado  =(row[5]||'').trim().toLowerCase();
     const desc    =(row[6]||'').trim();
-    const notas   =(row[7]||'').trim();
+    const horario =(row[7]||'').trim();
+    const notas   =(row[8]||'').trim();
 
     if(!desc) continue;
     if(!['pendiente','en proceso'].includes(estado)) continue;
@@ -259,7 +260,7 @@ async function readSheet(){
     if(prioRaw.includes('alta')||prioRaw.includes('🔴')) prio='Alta';
     else if(prioRaw.includes('baja')||prioRaw.includes('🟢')) prio='Baja';
 
-    all.push({empresa, area, prio, desc, notas});
+    all.push({empresa, area, prio, desc, horario, notas});
   }
   return all;
 }
@@ -268,9 +269,15 @@ async function readSheet(){
 // Tries to find a time range like "15:00 a 17:00" or "12:00 pm a 2:00 pm" in notes/desc
 function extractTime(str){
   if(!str) return null;
-  // Match patterns like "15:00 a 17:00", "12:00 pm a 2:00 pm", "7:20 – 9:00"
-  const m = str.match(/(\d{1,2}:\d{2}(?:\s*[ap]m)?)\s*(?:a|–|-)\s*(\d{1,2}:\d{2}(?:\s*[ap]m)?)/i);
-  if(m) return `${m[1]} – ${m[2]}`;
+  // Match patterns like:
+  // "15:00 a 17:00", "de 15:00 a 17:00 horas", "12:00 pm a 2:00 pm",
+  // "7:20 – 9:00", "15:00 - 17:00", "3:00 pm a 5:00 pm"
+  const m = str.match(/(\d{1,2}:\d{2}\s*(?:[ap]\.?m\.?)?)\s*(?:a|–|–|-)\s*(\d{1,2}:\d{2}\s*(?:[ap]\.?m\.?)?)/i);
+  if(m){
+    let t1 = m[1].trim().replace(/\./g,'');
+    let t2 = m[2].trim().replace(/\./g,'');
+    return `${t1} – ${t2}`;
+  }
   return null;
 }
 
@@ -289,7 +296,7 @@ function buildSchedule(all){
   slots.push({hora:'7:00 – 7:20', titulo:'Ritual de arranque', desc:'Revisar pendientes y definir 3 tareas del día. Sin teléfono.', empresa:'Personal', tipo:'', prio:'Rutina'});
 
   // Bloque profundo #1
-  if(altasW[0]) slots.push({hora:'7:20 – 9:00', titulo:altasW[0].desc, desc:altasW[0].empresa+(altasW[0].notas?' · '+altasW[0].notas:''), empresa:altasW[0].empresa, tipo:'', prio:'Alta'});
+  if(altasW[0]) slots.push({hora:altasW[0].horario||'7:20 – 9:00', titulo:altasW[0].desc, desc:altasW[0].empresa+(altasW[0].notas?' · '+altasW[0].notas:''), empresa:altasW[0].empresa, tipo:'', prio:'Alta'});
 
   // Pausa
   slots.push({hora:'9:00 – 9:15', titulo:'Pausa activa', desc:'Agua, camina. Mensajes urgentes — máx 15 min.', empresa:'–', tipo:'', prio:'Rutina'});
@@ -300,12 +307,11 @@ function buildSchedule(all){
 
   // Bloque profundo #2
   const b2=altasW[1]||mediasW[0];
-  if(b2) slots.push({hora:'10:45 – 12:00', titulo:b2.desc, desc:b2.empresa+(b2.notas?' · '+b2.notas:''), empresa:b2.empresa, tipo:'', prio:b2.prio});
+  if(b2) slots.push({hora:b2.horario||'10:45 – 12:00', titulo:b2.desc, desc:b2.empresa+(b2.notas?' · '+b2.notas:''), empresa:b2.empresa, tipo:'', prio:b2.prio});
 
   // Rutinas personales — insert from Drive with their real times
   personal.forEach(p=>{
-    const time = extractTime(p.notas) || extractTime(p.desc);
-    const hora = time || '—';
+    const hora = p.horario || extractTime(p.notas) || extractTime(p.desc) || '—';
     const esComida = p.desc.toLowerCase().includes('comer')||p.desc.toLowerCase().includes('comida');
     const esGym    = p.desc.toLowerCase().includes('gym');
     const esLimp   = p.desc.toLowerCase().includes('limpieza');
@@ -316,7 +322,7 @@ function buildSchedule(all){
 
   // Bloque tarde — pendientes media
   const b3=mediasW[1]||mediasW[0];
-  if(b3&&b3!==b2) slots.push({hora:'–', titulo:b3.desc, desc:b3.empresa+(b3.notas?' · '+b3.notas:''), empresa:b3.empresa, tipo:'', prio:b3.prio});
+  if(b3&&b3!==b2) slots.push({hora:b3.horario||'14:30 – 16:00', titulo:b3.desc, desc:b3.empresa+(b3.notas?' · '+b3.notas:''), empresa:b3.empresa, tipo:'', prio:b3.prio});
 
   // Cierre
   slots.push({hora:'Cierre', titulo:'Cierre del día', desc:'Tachar completadas. Dar de alta pendientes nuevos en Drive.', empresa:'Personal', tipo:'', prio:'Rutina'});
