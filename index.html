@@ -346,11 +346,14 @@ function buildSchedule(all){
   if(rsC) fixed.push({start:9*60+15, end:10*60, titulo:`Río Sonora — ${rsC.p}`, desc:rsC.d, empresa:'Río Sonora', tipo:rsC.f, prio:'Alta'});
   if(mcC) fixed.push({start:10*60, end:10*60+45, titulo:`Mercer — ${mcC.p}`, desc:mcC.d, empresa:'Mercer', tipo:mcC.f, prio:'Alta'});
 
-  // Personal items with Horario column filled
+  // Personal items — use Horario column (H) if filled, else extract from Notas or Desc
+  const personalNoTime = [];
   personal.forEach(p => {
-    const t = toMinutes(p.horario) || toMinutes(p.notas);
+    const t = toMinutes(p.horario) || toMinutes(p.notas) || toMinutes(p.desc);
     if(t){
       fixed.push({start:t[0], end:t[1], titulo:p.desc, desc:p.notas||'', empresa:'Personal', tipo:'', prio:'Rutina'});
+    } else {
+      personalNoTime.push(p);
     }
   });
 
@@ -375,7 +378,9 @@ function buildSchedule(all){
   }
 
   // ── STEP 2: Find free slots and fill with unscheduled work items ──
-  const workNoTime = work.filter(p => !p.horario);
+  // Exclude "Publicar contenido en redes" — already handled by content calendar
+  const isRedes = p => p.desc.toLowerCase().includes('publicar contenido') || p.area.toLowerCase().includes('marketing');
+  const workNoTime = work.filter(p => !p.horario && !isRedes(p));
   const altasNoTime  = workNoTime.filter(p => p.prio === 'Alta');
   const mediasNoTime = workNoTime.filter(p => p.prio === 'Media');
   const floaters = [...altasNoTime, ...mediasNoTime]; // priority order
@@ -414,6 +419,11 @@ function buildSchedule(all){
         break;
       }
     }
+  });
+
+  // Add personal items without time at end
+  personalNoTime.forEach(p => {
+    filled.push({start:17*60, end:17*60+30, titulo:p.desc, desc:p.notas||'', empresa:'Personal', tipo:'', prio:'Rutina'});
   });
 
   // ── STEP 3: Merge fixed + filled, sort, add cierre ──
