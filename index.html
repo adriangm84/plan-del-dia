@@ -2,6 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="version" content="202606100045">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -149,7 +153,7 @@
     Descargar PDF
   </button>
 
-  <div class="footer">Río Sonora · Velamar · CulturAgave · Mercer<br>Sistema de Gestión · Adrián González Mercer</div>
+  <div class="footer">Río Sonora · Velamar · CulturAgave · Mercer<br>Sistema de Gestión · Adrián González Mercer<br><span style="opacity:0.5">v202606100045</span></div>
 </div>
 
 <script>
@@ -163,8 +167,26 @@ const DIAS  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sába
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DOW   = new Date().getDay();
 function todayStr() { const d=new Date(); return `${DIAS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}, ${d.getFullYear()}`; }
-function todayFile(){ const d=new Date(); return `Plan_${DIAS[d.getDay()]}_${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}${d.getFullYear()}`; }
+function todayFile(){ const d=new Date(); const hh=String(d.getHours()).padStart(2,'0'); const mm=String(d.getMinutes()).padStart(2,'0'); return `Plan_${DIAS[d.getDay()]}_${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}${d.getFullYear()}_${hh}${mm}`; }
 document.getElementById('hDate').textContent = todayStr();
+
+// ── SERVICE WORKER ────────────────────────────────────────────────────────
+// Register SW for cache control
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => reg.unregister());
+  });
+}
+
+// Force reload if new version available
+const APP_VERSION = '202606100045';
+const storedVersion = localStorage.getItem('appVersion');
+if (storedVersion && storedVersion !== APP_VERSION) {
+  localStorage.setItem('appVersion', APP_VERSION);
+  window.location.reload(true);
+} else {
+  localStorage.setItem('appVersion', APP_VERSION);
+}
 if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone)
   document.getElementById('installHint').classList.add('show');
 
@@ -445,6 +467,26 @@ function downloadPDF(){
 }
 
 initGIS();
+
+// ── REGISTER SERVICE WORKER ───────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/plan-del-dia/sw.js')
+      .then(reg => {
+        // Check for updates every time app opens
+        reg.update();
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'activated') {
+              window.location.reload();
+            }
+          });
+        });
+      });
+  });
+}
+
 </script>
 </body>
 </html>
