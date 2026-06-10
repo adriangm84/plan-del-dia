@@ -287,79 +287,152 @@ async function readSheet(){
   return all;
 }
 
-// ── EXTRACT TIME FROM NOTES ───────────────────────────────────────────────
-// Tries to find a time range like "15:00 a 17:00" or "12:00 pm a 2:00 pm" in notes/desc
-function extractTime(str){
+// ── SMART SCHEDULER ──────────────────────────────────────────────────────
+// Converts "15:00" or "3:00 pm" or "de 15:00 a 17:00 horas" to minutes from midnight
+function toMinutes(str){
   if(!str) return null;
-  // Match patterns like:
-  // "15:00 a 17:00", "de 15:00 a 17:00 horas", "12:00 pm a 2:00 pm",
-  // "7:20 – 9:00", "15:00 - 17:00", "3:00 pm a 5:00 pm"
-  const m = str.match(/(\d{1,2}:\d{2}\s*(?:[ap]\.?m\.?)?)\s*(?:a|–|–|-)\s*(\d{1,2}:\d{2}\s*(?:[ap]\.?m\.?)?)/i);
-  if(m){
-    let t1 = m[1].trim().replace(/\./g,'');
-    let t2 = m[2].trim().replace(/\./g,'');
-    return `${t1} – ${t2}`;
+  str = str.trim().toLowerCase();
+  // Try range first — return start time
+  const range = str.match(/(?:de\s+)?(\d{1,2}:\d{2})\s*(?:[ap]\.?m\.?)?\s*(?:a|–|-)\s*(\d{1,2}:\d{2})\s*(?:[ap]\.?m\.?)?/i);
+  if(range){
+    return [parseTime(range[1], str), parseTime(range[2], str)];
+  }
+  // Single time
+  const single = str.match(/(\d{1,2}:\d{2})\s*([ap]\.?m\.?)?/i);
+  if(single){
+    const t = parseTime(single[1], str);
+    return [t, t + 60]; // default 1hr if no end
   }
   return null;
 }
 
+function parseTime(timeStr, context){
+  const [h, m] = timeStr.split(':').map(Number);
+  let hr = h;
+  if(context && context.includes('pm') && hr < 12) hr += 12;
+  if(context && context.includes('am') && hr === 12) hr = 0;
+  return hr * 60 + m;
+}
+
+function minsToStr(mins){
+  if(mins === null || mins === undefined) return '—';
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+function rangeStr(start, end){
+  return `${minsToStr(start)} – ${minsToStr(end)}`;
+}
+
 // ── BUILD SCHEDULE FROM DRIVE DATA ────────────────────────────────────────
 function buildSchedule(all){
-  const personal = all.filter(p=>p.empresa==='Personal');
-  const work     = all.filter(p=>p.empresa!=='Personal');
-  const altasW   = work.filter(p=>p.prio==='Alta');
-  const mediasW  = work.filter(p=>p.prio==='Media');
-  const rsC=RS_CAL[DOW], mcC=MC_CAL[DOW];
+  const personal = all.filter(p => p.empresa === 'Personal');
+  const work     = all.filter(p => p.empresa !== 'Personal');
+  const altasW   = work.filter(p => p.prio === 'Alta');
+  const mediasW  = work.filter(p => p.prio === 'Media');
+  const rsC = RS_CAL[DOW], mcC = MC_CAL[DOW];
 
-  // Build time-slotted schedule
-  const slots = [];
+  // ── STEP 1: Build list of fixed blocks (items with explicit Horario) ──
+  const fixed = []; // {start, end, titulo, desc, empresa, tipo, prio}
 
-  // Ritual arranque — always first
-  slots.push({hora:'7:00 – 7:20', titulo:'Ritual de arranque', desc:'Revisar pendientes y definir 3 tareas del día. Sin teléfono.', empresa:'Personal', tipo:'', prio:'Rutina'});
+  // Always fixed: ritual arranque
+  fixed.push({start:7*60, end:7*60+20, titulo:'Ritual de arranque', desc:'Revisar pendientes y definir 3 tareas del día. Sin teléfono.', empresa:'Personal', tipo:'', prio:'Rutina'});
 
-  // Bloque profundo #1
-  if(altasW[0]) slots.push({hora:altasW[0].horario||'7:20 – 9:00', titulo:altasW[0].desc, desc:altasW[0].empresa+(altasW[0].notas?' · '+altasW[0].notas:''), empresa:altasW[0].empresa, tipo:'', prio:'Alta'});
+  // Always fixed: pausa activa
+  fixed.push({start:9*60, end:9*60+15, titulo:'Pausa activa', desc:'Agua, camina. Mensajes urgentes — máx 15 min.', empresa:'–', tipo:'', prio:'Rutina'});
 
-  // Pausa
-  slots.push({hora:'9:00 – 9:15', titulo:'Pausa activa', desc:'Agua, camina. Mensajes urgentes — máx 15 min.', empresa:'–', tipo:'', prio:'Rutina'});
+  // Always fixed: publicaciones de redes (based on day)
+  if(rsC) fixed.push({start:9*60+15, end:10*60, titulo:`Río Sonora — ${rsC.p}`, desc:rsC.d, empresa:'Río Sonora', tipo:rsC.f, prio:'Alta'});
+  if(mcC) fixed.push({start:10*60, end:10*60+45, titulo:`Mercer — ${mcC.p}`, desc:mcC.d, empresa:'Mercer', tipo:mcC.f, prio:'Alta'});
 
-  // Publicaciones de redes
-  if(rsC) slots.push({hora:'9:15 – 10:00', titulo:`Río Sonora — ${rsC.p}`, desc:rsC.d, empresa:'Río Sonora', tipo:rsC.f, prio:'Alta'});
-  if(mcC) slots.push({hora:'10:00 – 10:45', titulo:`Mercer — ${mcC.p}`, desc:mcC.d, empresa:'Mercer', tipo:mcC.f, prio:'Alta'});
-
-  // Bloque profundo #2
-  const b2=altasW[1]||mediasW[0];
-  if(b2) slots.push({hora:b2.horario||'10:45 – 12:00', titulo:b2.desc, desc:b2.empresa+(b2.notas?' · '+b2.notas:''), empresa:b2.empresa, tipo:'', prio:b2.prio});
-
-  // Rutinas personales — insert from Drive with their real times
-  personal.forEach(p=>{
-    const hora = p.horario || extractTime(p.notas) || extractTime(p.desc) || '—';
-    const esComida = p.desc.toLowerCase().includes('comer')||p.desc.toLowerCase().includes('comida');
-    const esGym    = p.desc.toLowerCase().includes('gym');
-    const esLimp   = p.desc.toLowerCase().includes('limpieza');
-    if(esComida||esGym||esLimp){
-      slots.push({hora, titulo:p.desc, desc:p.notas||'', empresa:'Personal', tipo:'', prio:'Rutina'});
+  // Personal items with Horario column filled
+  personal.forEach(p => {
+    const t = toMinutes(p.horario) || toMinutes(p.notas);
+    if(t){
+      fixed.push({start:t[0], end:t[1], titulo:p.desc, desc:p.notas||'', empresa:'Personal', tipo:'', prio:'Rutina'});
     }
   });
 
-  // Bloque tarde — pendientes media
-  const b3=mediasW[1]||mediasW[0];
-  if(b3&&b3!==b2) slots.push({hora:b3.horario||'14:30 – 16:00', titulo:b3.desc, desc:b3.empresa+(b3.notas?' · '+b3.notas:''), empresa:b3.empresa, tipo:'', prio:b3.prio});
+  // Work items with Horario column filled
+  work.forEach(p => {
+    if(p.horario){
+      const t = toMinutes(p.horario);
+      if(t) fixed.push({start:t[0], end:t[1], titulo:p.desc, desc:p.empresa+(p.notas?' · '+p.notas:''), empresa:p.empresa, tipo:'', prio:p.prio});
+    }
+  });
 
-  // Cierre
-  slots.push({hora:'Cierre', titulo:'Cierre del día', desc:'Tachar completadas. Dar de alta pendientes nuevos en Drive.', empresa:'Personal', tipo:'', prio:'Rutina'});
+  // Sort fixed by start time
+  fixed.sort((a,b) => a.start - b.start);
 
-  // Sort by hora (rough)
-  const toMin=h=>{
-    const m=h.match(/(\d{1,2}):(\d{2})/);
-    if(!m) return 9999;
-    let hr=parseInt(m[1]), mn=parseInt(m[2]);
-    if(h.toLowerCase().includes('pm')&&hr<12) hr+=12;
-    return hr*60+mn;
-  };
-  slots.sort((a,b)=>toMin(a.hora)-toMin(b.hora));
+  // Resolve overlaps in fixed blocks (push conflicting items after previous end)
+  for(let i=1; i<fixed.length; i++){
+    if(fixed[i].start < fixed[i-1].end){
+      const duration = fixed[i].end - fixed[i].start;
+      fixed[i].start = fixed[i-1].end;
+      fixed[i].end   = fixed[i].start + duration;
+    }
+  }
 
-  return slots;
+  // ── STEP 2: Find free slots and fill with unscheduled work items ──
+  const workNoTime = work.filter(p => !p.horario);
+  const altasNoTime  = workNoTime.filter(p => p.prio === 'Alta');
+  const mediasNoTime = workNoTime.filter(p => p.prio === 'Media');
+  const floaters = [...altasNoTime, ...mediasNoTime]; // priority order
+
+  // Day bounds: 7:00 to 18:00
+  const DAY_START = 7 * 60;
+  const DAY_END   = 18 * 60;
+
+  // Build timeline gaps
+  const gaps = [];
+  let cursor = DAY_START;
+  const anchors = fixed.filter(f => f.start >= DAY_START);
+
+  anchors.forEach(block => {
+    if(block.start > cursor + 15) { // gap of at least 15 min
+      gaps.push({start: cursor, end: block.start});
+    }
+    cursor = Math.max(cursor, block.end);
+  });
+  if(cursor < DAY_END) gaps.push({start: cursor, end: DAY_END});
+
+  // Fill gaps with floaters
+  const filled = [];
+  let fi = 0;
+  gaps.forEach(gap => {
+    let pos = gap.start;
+    while(fi < floaters.length && pos < gap.end){
+      const item = floaters[fi];
+      const duration = 90; // default 90 min per work block
+      const blockEnd = Math.min(pos + duration, gap.end);
+      if(blockEnd - pos >= 30){ // only schedule if at least 30 min available
+        filled.push({start:pos, end:blockEnd, titulo:item.desc, desc:item.empresa+(item.notas?' · '+item.notas:''), empresa:item.empresa, tipo:'', prio:item.prio});
+        pos = blockEnd;
+        fi++;
+      } else {
+        break;
+      }
+    }
+  });
+
+  // ── STEP 3: Merge fixed + filled, sort, add cierre ──
+  const all_blocks = [...fixed, ...filled];
+  all_blocks.sort((a,b) => a.start - b.start);
+
+  // Add cierre at end of last block or 17:00 whichever is later
+  const lastEnd = all_blocks.length > 0 ? Math.max(all_blocks[all_blocks.length-1].end, 17*60) : 17*60;
+  all_blocks.push({start:lastEnd, end:lastEnd+30, titulo:'Cierre del día', desc:'Tachar completadas. Dar de alta pendientes nuevos en Drive.', empresa:'Personal', tipo:'', prio:'Rutina'});
+
+  // ── STEP 4: Convert to display format ──
+  return all_blocks.map(b => ({
+    hora:  rangeStr(b.start, b.end),
+    titulo: b.titulo,
+    desc:   b.desc,
+    empresa:b.empresa,
+    tipo:   b.tipo,
+    prio:   b.prio,
+  }));
 }
 
 // ── GENERATE ──────────────────────────────────────────────────────────────
